@@ -7,7 +7,7 @@ class Swish(nn.Module):
     def forward(self, x):
         return x * torch.sigmoid(x)
     
-class CNN(nn.Module):
+class CNNModel(nn.Module):
 
     def __init__(self, hidden_features=32, out_dim=1, **kwargs):
         super().__init__()

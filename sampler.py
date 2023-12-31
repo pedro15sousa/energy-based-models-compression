@@ -81,7 +81,7 @@ class Sampler:
             inp_imgs.data.clamp_(min=-1.0, max=1.0)
 
             # Part 2: calculate gradients for the current input.
-            print("Sampler model: ", model.device)
+            print("Sampler model: ", next(model.parameters()).device)
             print(model)
             out_imgs = -model(inp_imgs)
             out_imgs.sum().backward()

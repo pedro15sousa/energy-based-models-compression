@@ -63,8 +63,7 @@ class DeepEnergyModel(pl.LightningModule):
         real_imgs, _ = batch
         small_noise = torch.randn_like(real_imgs) * 0.005
         real_imgs.add_(small_noise).clamp_(min=-1.0, max=1.0)
-        print(next(self.cnn.parameters()).device)
-        print(self.device)
+
         # Obtain samples
         fake_imgs = self.sampler.sample_new_exmps(steps=60, step_size=10)
 

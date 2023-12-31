@@ -81,10 +81,9 @@ class Sampler:
             inp_imgs.data.clamp_(min=-1.0, max=1.0)
 
             # Part 2: calculate gradients for the current input.
-            print("Sampler model: ", next(model.parameters()).device)
-            print("cona")
-            print(model)
-            model = model.to(device)
+            # print("Sampler model: ", next(model.parameters()).device)
+            # print(model)
+            # model = model.to(device)
             out_imgs = -model(inp_imgs)
             out_imgs.sum().backward()
             inp_imgs.grad.data.clamp_(-0.03, 0.03) # For stabilizing and preventing too high gradients

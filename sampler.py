@@ -16,7 +16,7 @@ class Sampler:
             max_len - Maximum number of data points to keep in the buffer
         """
         super().__init__()
-        self.model = model
+        self.model = model.to(device)
         self.img_shape = img_shape
         self.sample_size = sample_size
         self.max_len = max_len
@@ -82,7 +82,9 @@ class Sampler:
 
             # Part 2: calculate gradients for the current input.
             print("Sampler model: ", next(model.parameters()).device)
+            print("cona")
             print(model)
+            model = model.to(device)
             out_imgs = -model(inp_imgs)
             out_imgs.sum().backward()
             inp_imgs.grad.data.clamp_(-0.03, 0.03) # For stabilizing and preventing too high gradients

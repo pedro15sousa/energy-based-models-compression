@@ -95,7 +95,6 @@ class FIDCallback(pl.Callback):
         """
         real_imgs, _ = batch
         fake_imgs = pl_module.sample_images_for_metrics()  # Assuming a method to generate fake images
-
         # Compute and store metrics
         score = self.compute_fid_score(real_imgs, fake_imgs)
         self.scores.append(score)
@@ -160,7 +159,7 @@ class GenerateImagesCallback(pl.Callback):
         start_imgs = torch.rand((self.batch_size,) + pl_module.hparams["img_shape"]).to(pl_module.device)
         start_imgs = start_imgs * 2 - 1
         torch.set_grad_enabled(True)  # Tracking gradients for sampling necessary
-        imgs_per_step = Sampler.generate_samples(pl_module.resnet, start_imgs, steps=self.num_steps, step_size=10, return_img_per_step=True)
+        imgs_per_step = Sampler.generate_samples(pl_module.cnn, start_imgs, steps=self.num_steps, step_size=10, return_img_per_step=True)
         torch.set_grad_enabled(False)
         pl_module.train()
         return imgs_per_step
@@ -195,44 +194,44 @@ class OutlierCallback(pl.Callback):
             pl_module.eval()
             rand_imgs = torch.rand((self.batch_size,) + pl_module.hparams["img_shape"]).to(pl_module.device)
             rand_imgs = rand_imgs * 2 - 1.0
-            rand_out = pl_module.resnet(rand_imgs).mean()
+            rand_out = pl_module.cnn(rand_imgs).mean()
             pl_module.train()
 
         trainer.logger.experiment.add_scalar("rand_out", rand_out, global_step=trainer.current_epoch)
 
 
-class DummyGenerateImagesCallback(pl.Callback):
+# class DummyGenerateImagesCallback(pl.Callback):
 
-    def __init__(self, batch_size=8, vis_steps=8, num_steps=256, every_n_epochs=5):
-        super().__init__()
-        self.batch_size = batch_size         # Number of images to generate
-        self.vis_steps = vis_steps           # Number of steps within generation to visualize
-        self.num_steps = num_steps           # Number of steps to take during generation
-        self.every_n_epochs = every_n_epochs # Only save those images every N epochs (otherwise tensorboard gets quite large)
+#     def __init__(self, batch_size=8, vis_steps=8, num_steps=256, every_n_epochs=5):
+#         super().__init__()
+#         self.batch_size = batch_size         # Number of images to generate
+#         self.vis_steps = vis_steps           # Number of steps within generation to visualize
+#         self.num_steps = num_steps           # Number of steps to take during generation
+#         self.every_n_epochs = every_n_epochs # Only save those images every N epochs (otherwise tensorboard gets quite large)
 
-    def on_train_epoch_end(self, trainer, pl_module, unused=None):
-        # Skip for all other epochs
-        if trainer.current_epoch % self.every_n_epochs == 0:
-            # Generate images
-            imgs_per_step = self.generate_imgs(pl_module)
-            # Plot and add to tensorboard
-            for i in range(imgs_per_step.shape[1]):
-                step_size = self.num_steps // self.vis_steps
-                imgs_to_plot = imgs_per_step[step_size-1::step_size,i]
-                # grid = torchvision.utils.make_grid(imgs_to_plot, nrow=imgs_to_plot.shape[0], normalize=True, range=(-1,1))
+#     def on_train_epoch_end(self, trainer, pl_module, unused=None):
+#         # Skip for all other epochs
+#         if trainer.current_epoch % self.every_n_epochs == 0:
+#             # Generate images
+#             imgs_per_step = self.generate_imgs(pl_module)
+#             # Plot and add to tensorboard
+#             for i in range(imgs_per_step.shape[1]):
+#                 step_size = self.num_steps // self.vis_steps
+#                 imgs_to_plot = imgs_per_step[step_size-1::step_size,i]
+#                 # grid = torchvision.utils.make_grid(imgs_to_plot, nrow=imgs_to_plot.shape[0], normalize=True, range=(-1,1))
                 
-                # Normalize the images
-                imgs_to_plot = (imgs_to_plot + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
-                grid = torchvision.utils.make_grid(imgs_to_plot, nrow=imgs_to_plot.shape[0], normalize=True)
+#                 # Normalize the images
+#                 imgs_to_plot = (imgs_to_plot + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
+#                 grid = torchvision.utils.make_grid(imgs_to_plot, nrow=imgs_to_plot.shape[0], normalize=True)
                 
-                trainer.logger.experiment.add_image(f"generation_{i}", grid, global_step=trainer.current_epoch)
+#                 trainer.logger.experiment.add_image(f"generation_{i}", grid, global_step=trainer.current_epoch)
 
-    def generate_imgs(self, pl_module):
-        pl_module.eval()
-        start_imgs = torch.rand((self.batch_size,) + pl_module.hparams["img_shape"]).to(pl_module.device)
-        start_imgs = start_imgs * 2 - 1
-        torch.set_grad_enabled(True)  # Tracking gradients for sampling necessary
-        imgs_per_step = Sampler.generate_samples(pl_module.cnn, start_imgs, steps=self.num_steps, step_size=10, return_img_per_step=True)
-        torch.set_grad_enabled(False)
-        pl_module.train()
-        return imgs_per_step
+#     def generate_imgs(self, pl_module):
+#         pl_module.eval()
+#         start_imgs = torch.rand((self.batch_size,) + pl_module.hparams["img_shape"]).to(pl_module.device)
+#         start_imgs = start_imgs * 2 - 1
+#         torch.set_grad_enabled(True)  # Tracking gradients for sampling necessary
+#         imgs_per_step = Sampler.generate_samples(pl_module.cnn, start_imgs, steps=self.num_steps, step_size=10, return_img_per_step=True)
+#         torch.set_grad_enabled(False)
+#         pl_module.train()
+#         return imgs_per_step

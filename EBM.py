@@ -5,28 +5,29 @@ import torch.optim as optim
 import torch.nn.utils.prune as prune
 
 from energy_funcs.resnet import ResNetModel
+from energy_funcs.cnn import CNNModel
 from sampler import Sampler
 
 class DeepEnergyModel(pl.LightningModule):
 
-    def __init__(self, img_shape, batch_size, alpha=0.1, lr=1e-4, beta1=0.0, **ResNetModel_args):
+    def __init__(self, img_shape, batch_size, alpha=0.1, lr=1e-4, beta1=0.0, f=CNNModel, **f_args):
         super().__init__()
         self.save_hyperparameters()
 
-        self.resnet = ResNetModel(**ResNetModel_args)
-        self.sampler = Sampler(self.resnet, img_shape=img_shape, sample_size=batch_size)
+        self.cnn = f(**f_args)
+        self.sampler = Sampler(self.cnn, img_shape=img_shape, sample_size=batch_size)
         self.example_input_array = torch.zeros(1, *img_shape)
 
     def apply_unstructured_pruning(self, amount=0.5):
         """Applies unstructured L1 pruning to each Conv2d layer in the resnet."""
-        for module in self.resnet.modules():
+        for module in self.cnn.modules():
             if isinstance(module, nn.Conv2d):
                 prune.l1_unstructured(module, name='weight', amount=amount)
                 prune.remove(module, 'weight')
 
     def apply_structured_pruning(self, amount=0.5):
         """Applies structured L1 pruning to each Conv2d layer in the resnet."""
-        for module in self.resnet.modules():
+        for module in self.cnn.modules():
             if isinstance(module, nn.Conv2d):
                 prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)  # dim=0 for filter pruning
                 prune.remove(module, 'weight')
@@ -38,6 +39,8 @@ class DeepEnergyModel(pl.LightningModule):
             # Count all parameters and pruned parameters (those set to zero)
             total_params += param.numel()
             pruned_params += (param == 0).sum().item()
+        print(f"Total parameters: {total_params}")
+        print(f"Pruned parameters: {pruned_params}")
 
     def sample_images_for_metrics(self):
         # Generate images for computing metrics
@@ -45,7 +48,7 @@ class DeepEnergyModel(pl.LightningModule):
         return samples
 
     def forward(self, x):
-        z = self.resnet(x)
+        z = self.cnn(x)
         return z
 
     def configure_optimizers(self):
@@ -66,7 +69,7 @@ class DeepEnergyModel(pl.LightningModule):
 
         # Predict energy score for all images
         inp_imgs = torch.cat([real_imgs, fake_imgs], dim=0)
-        real_out, fake_out = self.resnet(inp_imgs).chunk(2, dim=0)
+        real_out, fake_out = self.cnn(inp_imgs).chunk(2, dim=0)
 
         # Calculate losses
         reg_loss = self.hparams.alpha * (real_out ** 2 + fake_out ** 2).mean()
@@ -88,7 +91,7 @@ class DeepEnergyModel(pl.LightningModule):
         fake_imgs = torch.rand_like(real_imgs) * 2 - 1
 
         inp_imgs = torch.cat([real_imgs, fake_imgs], dim=0)
-        real_out, fake_out = self.resnet(inp_imgs).chunk(2, dim=0)
+        real_out, fake_out = self.cnn(inp_imgs).chunk(2, dim=0)
 
         cdiv = fake_out.mean() - real_out.mean()
         self.log('val_contrastive_divergence', cdiv)

@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from types import SimpleNamespace
 
+######### Swish activation function #########
 class Swish(nn.Module):
 
     def forward(self, x):
@@ -16,6 +17,7 @@ act_fn_by_name = {
     "gelu": nn.GELU
 }
 
+######### Adapted ResNet from tutorial (originally for CIFAR) #########
 class ResNetBlock(nn.Module):
 
     def __init__(self, c_in, act_fn, subsample=False, c_out=-1):
@@ -49,45 +51,6 @@ class ResNetBlock(nn.Module):
             x = self.downsample(x)
         out = z + x
         out = self.act_fn(out)
-        return out
-    
-
-class PreActResNetBlock(nn.Module):
-
-    def __init__(self, c_in, act_fn, subsample=False, c_out=-1):
-        """
-        Inputs:
-            c_in - Number of input features
-            act_fn - Activation class constructor (e.g. nn.ReLU)
-            subsample - If True, we want to apply a stride inside the block and reduce the output shape by 2 in height and width
-            c_out - Number of output features. Note that this is only relevant if subsample is True, as otherwise, c_out = c_in
-        """
-        super().__init__()
-        if not subsample:
-            c_out = c_in
-
-        # Network representing F
-        self.net = nn.Sequential(
-            nn.BatchNorm2d(c_in),
-            act_fn(),
-            nn.Conv2d(c_in, c_out, kernel_size=3, padding=1, stride=1 if not subsample else 2, bias=False),
-            nn.BatchNorm2d(c_out),
-            act_fn(),
-            nn.Conv2d(c_out, c_out, kernel_size=3, padding=1, bias=False)
-        )
-
-        # 1x1 convolution can apply non-linearity as well, but not strictly necessary
-        self.downsample = nn.Sequential(
-            nn.BatchNorm2d(c_in),
-            act_fn(),
-            nn.Conv2d(c_in, c_out, kernel_size=1, stride=2, bias=False)
-        ) if subsample else None
-
-    def forward(self, x):
-        z = self.net(x)
-        if self.downsample is not None:
-            x = self.downsample(x)
-        out = z + x
         return out
     
 
@@ -172,4 +135,70 @@ class ResNetModel(nn.Module):
         x = self.input_net(x)
         x = self.blocks(x)
         x = self.output_net(x)
+        return x
+
+
+
+
+######### Adapted ResNet18 with no BatchNorm and Swish activation #########
+class BasicResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(BasicResidualBlock, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=True)
+        self.swish1 = Swish()
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True)
+        self.swish2 = Swish()
+
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=True)
+            )
+
+    def forward(self, x):
+        identity = x
+        out = self.conv1(x)
+        out = self.swish1(out)
+        out = self.conv2(out)
+        out += self.shortcut(identity)
+        out = self.swish2(out)
+        return out
+
+class ResNet18(nn.Module):
+    def __init__(self, in_channels=1, num_classes=10):
+        super(ResNet18, self).__init__()
+        self.in_channels = 64
+        self.conv1 = nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3, bias=True)
+        self.swish = Swish()
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
+        self.layer1 = self._make_layer(64, 2, stride=1)
+        self.layer2 = self._make_layer(128, 2, stride=2)
+        self.layer3 = self._make_layer(256, 2, stride=2)
+        self.layer4 = self._make_layer(512, 2, stride=2)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512, num_classes)
+
+    def _make_layer(self, out_channels, num_blocks, stride):
+        layers = []
+        layers.append(BasicResidualBlock(self.in_channels, out_channels, stride))
+        self.in_channels = out_channels
+        for _ in range(1, num_blocks):
+            layers.append(BasicResidualBlock(out_channels, out_channels))
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.swish(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
         return x

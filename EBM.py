@@ -13,7 +13,6 @@ class DeepEnergyModel(pl.LightningModule):
     def __init__(self, img_shape, batch_size, in_channels, num_classes, alpha=0.1, lr=1e-4, beta1=0.0, f=CNNModel, **f_args):
         super().__init__()
         self.save_hyperparameters()
-        print(num_classes)
         self.cnn = f(in_channels=num_classes, num_classes=num_classes)
         self.sampler = Sampler(self.cnn, img_shape=img_shape, sample_size=batch_size)
         self.example_input_array = torch.zeros(1, *img_shape)
@@ -49,7 +48,6 @@ class DeepEnergyModel(pl.LightningModule):
 
     def forward(self, x):
         z = self.cnn(x)
-        print("merda: ", z)
         return z
 
     def configure_optimizers(self):

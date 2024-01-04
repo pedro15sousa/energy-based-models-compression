@@ -49,6 +49,7 @@ class DeepEnergyModel(pl.LightningModule):
 
     def forward(self, x):
         z = self.cnn(x)
+        print(z.shape)
         return z
 
     def configure_optimizers(self):

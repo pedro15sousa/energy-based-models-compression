@@ -15,7 +15,6 @@ class DeepEnergyModel(pl.LightningModule):
         self.save_hyperparameters()
 
         self.cnn = f(**f_args)
-        self.enery_output = nn.Linear(self.cnn.last_dim, 1)
         self.sampler = Sampler(self.cnn, img_shape=img_shape, sample_size=batch_size)
         self.example_input_array = torch.zeros(1, *img_shape)
 
@@ -50,8 +49,7 @@ class DeepEnergyModel(pl.LightningModule):
 
     def forward(self, x):
         z = self.cnn(x)
-        print(self.energy_output(z).squeeze().shape)
-        return self.energy_output(z).squeeze()
+        return z
 
     def configure_optimizers(self):
         # Energy models can have issues with momentum as the loss surfaces changes with its parameters.

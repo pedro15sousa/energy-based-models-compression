@@ -35,10 +35,10 @@ class ResNetBlock(nn.Module):
         # Network representing F
         self.net = nn.Sequential(
             nn.Conv2d(c_in, c_out, kernel_size=3, padding=1, stride=1 if not subsample else 2, bias=False),  # No bias needed as the Batch Norm handles it
-            nn.BatchNorm2d(c_out),
+            # nn.BatchNorm2d(c_out),
             act_fn(),
             nn.Conv2d(c_out, c_out, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(c_out)
+            # nn.BatchNorm2d(c_out)
         )
 
         # 1x1 convolution with stride 2 means we take the upper left value, and transform it to new output size
@@ -61,7 +61,7 @@ resnet_blocks_by_name = {
 
 class ResNetModel(nn.Module):
 
-    def __init__(self, num_classes=1, num_blocks=[3,3,3], c_hidden=[16,32,64], act_fn_name="swish", block_name="ResNetBlock", **kwargs):
+    def __init__(self, num_classes=10, num_blocks=[3,3,3], c_hidden=[16,32,64], act_fn_name="swish", block_name="ResNetBlock", **kwargs):
         """
         Inputs:
             num_classes - Number of classification outputs (10 for MNIST), but for energy models is 1 scalar
@@ -85,16 +85,16 @@ class ResNetModel(nn.Module):
         c_hidden = self.hparams.c_hidden
 
         # A first convolution on the original image to scale up the channel size
-        if self.hparams.block_class == PreActResNetBlock: # => Don't apply non-linearity on output
-            self.input_net = nn.Sequential(
-                nn.Conv2d(1, c_hidden[0], kernel_size=3, padding=1, bias=False)
-            )
-        else:
-            self.input_net = nn.Sequential(
-                nn.Conv2d(1, c_hidden[0], kernel_size=3, padding=1, bias=False),
-                nn.BatchNorm2d(c_hidden[0]),
-                self.hparams.act_fn()
-            )
+        # if self.hparams.block_class == PreActResNetBlock: # => Don't apply non-linearity on output
+        #     self.input_net = nn.Sequential(
+        #         nn.Conv2d(1, c_hidden[0], kernel_size=3, padding=1, bias=False)
+        #     )
+        # else:
+        self.input_net = nn.Sequential(
+            nn.Conv2d(1, c_hidden[0], kernel_size=3, padding=1, bias=False),
+            # nn.BatchNorm2d(c_hidden[0]),
+            self.hparams.act_fn()
+        )
 
         # Creating the ResNet blocks
         blocks = []

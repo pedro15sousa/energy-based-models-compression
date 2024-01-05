@@ -4,16 +4,16 @@ import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn.utils.prune as prune
 
-from energy_funcs.resnet import ResNetModel
+from energy_funcs.resnet import ResNet18
 from energy_funcs.cnn import CNNModel
 from sampler import Sampler
 
 class DeepEnergyModel(pl.LightningModule):
 
-    def __init__(self, img_shape, batch_size, in_channels, num_classes, alpha=0.1, lr=1e-4, beta1=0.0, f=CNNModel, **f_args):
+    def __init__(self, img_shape, batch_size, alpha=0.1, lr=1e-4, beta1=0.0, f=ResNet18, **f_args):
         super().__init__()
         self.save_hyperparameters()
-        self.cnn = f(in_channels=num_classes, num_classes=num_classes)
+        self.cnn = f(**f_args)
         self.sampler = Sampler(self.cnn, img_shape=img_shape, sample_size=batch_size)
         self.example_input_array = torch.zeros(1, *img_shape)
 

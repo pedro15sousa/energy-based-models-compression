@@ -202,3 +202,43 @@ class ResNet18(nn.Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
+        
+
+class ResNet18Simpler(nn.Module):
+    def __init__(self, in_channels=1, num_classes=10):
+        super(ResNet18, self).__init__()
+        self.in_channels = 32
+        self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=7, stride=2, padding=3, bias=True)
+        self.swish = Swish()
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
+        self.layer1 = self._make_layer(32, 2, stride=1)
+        self.layer2 = self._make_layer(64, 2, stride=2)
+        self.layer3 = self._make_layer(128, 2, stride=2)
+        self.layer4 = self._make_layer(256, 2, stride=2)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(256, num_classes)
+
+    def _make_layer(self, out_channels, num_blocks, stride):
+        layers = []
+        layers.append(BasicResidualBlock(self.in_channels, out_channels, stride))
+        self.in_channels = out_channels
+        for _ in range(1, num_blocks):
+            layers.append(BasicResidualBlock(out_channels, out_channels))
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.swish(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        return x

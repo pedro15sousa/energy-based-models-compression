@@ -206,7 +206,7 @@ class ResNet18(nn.Module):
 
 class ResNet18Simpler(nn.Module):
     def __init__(self, in_channels=1, num_classes=10):
-        super(ResNet18, self).__init__()
+        super(ResNet18Simpler, self).__init__()
         self.in_channels = 32
         self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=7, stride=2, padding=3, bias=True)
         self.swish = Swish()

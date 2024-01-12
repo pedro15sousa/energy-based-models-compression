@@ -50,6 +50,10 @@ class DeepEnergyModel(pl.LightningModule):
         z = self.cnn(x)
         return z
 
+    def convert_to_scalar(self, x):
+        z = nn.Linear(10, 1)(x)
+        return z
+
     def configure_optimizers(self):
         # Energy models can have issues with momentum as the loss surfaces changes with its parameters.
         # Hence, we set it to 0 by default.

@@ -49,11 +49,17 @@ pip install -r requirements.txt
 ```
 
 ## Getting started
-The quickest way to get started with experimentation is to load some of the notebooks in Google Colab. Notebooks that end in analysis (e.g. `knowledge_distillation_analysis.ipynb`) are for experimenting with trained models and the ones ending in EBM (e.g. `knowledge_distillation_EBM.ipynb`) focus on training/generating the compressed version of the baseline, using the matching techniques. A Google Drive folder is currently available with the pre-trained baseline model, the structured and unstructured pruned models, and 6 different student models. Extra models include different architecture experimentaions for the baseline. Depending on the desired experimentation, the user should load the models locally in a subfolder in `saved_models/MNIST/` (e.g. place all pruned models in `saved_models/MNIST/pruned/`). Some notebooks might require adjusting the file paths depending on if it is being ran from Colab or locally.
+The quickest way to get started with experimentation is to load some of the notebooks in Google Colab. Notebooks that end in analysis (e.g. `knowledge_distillation_analysis.ipynb`) are for experimenting with trained models and the ones ending in EBM (e.g. `knowledge_distillation_EBM.ipynb`) focus on training/generating the compressed version of the baseline, using the matching techniques. A Google Drive folder is currently available with the pre-trained baseline model, the structured and unstructured pruned models, and 6 different student models. Extra models include different architecture experimentaions for the baseline. Depending on the desired experimentation, the user should load the compressed models locally in a subfolder in `saved_models/MNIST/` (e.g. place all pruned models in `saved_models/MNIST/pruned/`). Some notebooks might require adjusting the file paths depending on if it is being ran from Colab or locally.
 Pre-trained models can be found in https://drive.google.com/drive/folders/1HJfPHmJdci1PkmCUN3Z6oLKN9o79VLrB?usp=sharing
 
 Alternatively, the user can re-train the models, including the baseline. The energy functions can be found in `energy_funcs` and the user can experiment with multiple. It is important to note that the larger EBMs were trained on NVIDIA A100 GPUs for close to 3 days, which might be highly costly money-wise.
 
-
-
+## Navigating the codebase
+- `/saved_models` is the default directory to store the relevant pre-trained models (in google drive because of model size). Baseline should be saved as `/saved_models/MNIST_resnet18.ckpt`. 
+- `/energy_funcs` contains all the models that parameterised the EBM's energy function in our experiments
+- `/plots` stores the generated plots in the experimentation stage
+- `callbacks.py` has customised callbacks used by the PyTorch Lightning trainer.
+- `EBM.py` and `JEM.py` host the model classes.
+- `sampler.py` has our Sampler class that implements a sampler buffer and contrastive divergence with Stochastic Gradient Langevin Dynamics.
+- `/notebooks` contains the main logic for training and compressing EBMs, as previously mentioned.
 

@@ -40,6 +40,7 @@ class DeepEnergyModel(pl.LightningModule):
             pruned_params += (param == 0).sum().item()
         print(f"Total parameters: {total_params}")
         print(f"Pruned parameters: {pruned_params}")
+        return pruned_params
 
     def sample_images_for_metrics(self):
         # Generate images for computing metrics

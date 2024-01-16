@@ -165,7 +165,7 @@ class BasicResidualBlock(nn.Module):
         return out
 
 class ResNet18(nn.Module):
-    def __init__(self, in_channels=1, num_classes=10):
+    def __init__(self, in_channels=1, num_classes=10, **kwargs):
         super(ResNet18, self).__init__()
         self.in_channels = 64
         self.conv1 = nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3, bias=True)
@@ -205,7 +205,7 @@ class ResNet18(nn.Module):
         
 
 class ResNet18Simpler(nn.Module):
-    def __init__(self, in_channels=1, num_classes=10):
+    def __init__(self, in_channels=1, num_classes=10, **kwargs):
         super(ResNet18Simpler, self).__init__()
         self.in_channels = 32
         self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=7, stride=2, padding=3, bias=True)

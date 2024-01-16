@@ -38,9 +38,15 @@ This section of the README details the planning and decision-making processes we
 
 ## Setup
 As long as you have Python3 installed, run the following commands:
-`python -m venv py_env`
-`source py_env/bin/activate`
-`pip install -r requirements.txt`
+```python
+python -m venv py_env
+```
+```bash
+source py_env/bin/activate
+```
+```bash
+pip install -r requirements.txt
+```
 
 ## Getting started
 The quickest way to get started with experimentation is to load some of the notebooks in Google Colab. Notebooks that end in analysis (e.g. `knowledge_distillation_analysis.ipynb`) are for experimenting with trained models and the ones ending in EBM (e.g. `knowledge_distillation_EBM.ipynb`) focus on training/generating the compressed version of the baseline, using the matching techniques. A Google Drive folder is currently available with the pre-trained baseline model, the structured and unstructured pruned models, and 6 different student models. Extra models include different architecture experimentaions for the baseline. Depending on the desired experimentation, the user should load the models locally in a subfolder in `saved_models/MNIST/` (e.g. place all pruned models in `saved_models/MNIST/pruned/`). Some notebooks might require adjusting the file paths depending on if it is being ran from Colab or locally.
